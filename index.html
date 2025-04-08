@@ -69,7 +69,7 @@
                 <h3>Thông Tin Liên Hệ</h3>
                 <p><i class="fas fa-map-marker-alt"></i> Đại Học Công Nghệ, TP. Hồ Chí Minh</p>
                 <p><i class="fas fa-phone"></i> 0356 894 178</p>
-                <p><i class="fas fa-envelope"></i> <a href="mailto:support@example.com">support@example.com</a></p>
+                <p><i class="fas fa-envelope"></i> <a href="/cdn-cgi/l/email-protection#c8bbbdb8b8a7babc88adb0a9a5b8a4ade6aba7a5"><span class="__cf_email__" data-cfemail="630563534c515763465b424e534f460d404c4e">[email&#160;protected]</span></a></p>
             </div>
             <div class="footer-section">
                 <h3>Liên Kết Nhanh</h3>
@@ -96,7 +96,7 @@
         </div>
     </footer>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         // Khởi tạo danh sách sản phẩm nếu chưa có
         if (!localStorage.getItem('allProducts')) {
             const initialProducts = [
@@ -114,6 +114,13 @@
             localStorage.setItem('allProducts', JSON.stringify(initialProducts));
         }
 
+        // Đảm bảo tài khoản admin luôn tồn tại
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        if (!users.some(user => user.username === "admin")) {
+            users.push({ username: "admin", password: "admin123", role: "admin" });
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+
         // Cập nhật liên kết đăng nhập/đăng xuất và thông báo chào mừng
         function updateAuthLink() {
             const authLink = document.getElementById('auth-link');
@@ -121,7 +128,7 @@
             const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
             if (currentUser) {
                 authLink.innerHTML = '<a href="#" onclick="logout()">Đăng xuất</a>';
-                welcomeMessage.textContent = `Xin chào, ${currentUser.fullName}!`; // Hiển thị fullName
+                welcomeMessage.textContent = `Xin chào, ${currentUser.fullName}!`;
             } else {
                 authLink.innerHTML = '<a href="login.html">Đăng nhập</a>';
                 welcomeMessage.textContent = '';
@@ -154,7 +161,6 @@
 
         // Thêm sản phẩm vào giỏ hàng
         function addToCart(name, price, id) {
-            // Kiểm tra trạng thái đăng nhập
             const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
             if (!currentUser) {
                 alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
@@ -211,7 +217,7 @@
         // Đăng xuất
         function logout() {
             sessionStorage.removeItem('currentUser');
-            localStorage.removeItem('cart'); // Xóa giỏ hàng khi đăng xuất
+            localStorage.removeItem('cart');
             alert("Đăng xuất thành công!");
             window.location.href = "login.html";
         }
@@ -222,5 +228,5 @@
             displayProducts();
         };
     </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92d1ff0d3a10b019',t:'MTc0NDExNzczNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

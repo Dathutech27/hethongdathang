@@ -57,49 +57,56 @@
 
         // Khởi tạo dữ liệu giả trong localStorage nếu chưa có
         function initializeData() {
-            // Admin
-            if (!localStorage.getItem('admins')) {
-                const admins = [
-                    { id: 1, fullName: "Admin", username: "admin", password: "admin123", role: "Admin" },
-                    { id: 2, fullName: "Admin 1", username: "admin1", password: "admin123", role: "Admin" },
-                    { id: 3, fullName: "Admin 2", username: "admin2", password: "admin123", role: "Admin" }
-                ];
-                localStorage.setItem('admins', JSON.stringify(admins));
+    // Admin
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    // Đảm bảo tài khoản admin luôn tồn tại trong users
+    if (!users.some(user => user.username === "admin")) {
+        users.push({ username: "admin", password: "admin123", role: "admin" });
+        localStorage.setItem('users', JSON.stringify(users));
+    }
 
-                // Đồng bộ với danh sách users
-                let users = JSON.parse(localStorage.getItem('users')) || [];
-                admins.forEach(admin => {
-                    if (!users.some(user => user.username === admin.username)) {
-                        users.push({ username: admin.username, password: admin.password, role: "admin" });
-                    }
-                });
-                localStorage.setItem('users', JSON.stringify(users));
-            }
+    if (!localStorage.getItem('admins')) {
+        const admins = [
+            { id: 1, fullName: "Admin", username: "admin", password: "admin123", role: "Admin" },
+            { id: 2, fullName: "Admin 1", username: "admin1", password: "admin123", role: "Admin" },
+            { id: 3, fullName: "Admin 2", username: "admin2", password: "admin123", role: "Admin" }
+        ];
+        localStorage.setItem('admins', JSON.stringify(admins));
 
-            // Khách hàng (nếu chưa có)
-            if (!localStorage.getItem('customers')) {
-                const customers = [];
-                localStorage.setItem('customers', JSON.stringify(customers));
+        // Đồng bộ với danh sách users
+        users = JSON.parse(localStorage.getItem('users')) || [];
+        admins.forEach(admin => {
+            if (!users.some(user => user.username === admin.username)) {
+                users.push({ username: admin.username, password: admin.password, role: "admin" });
             }
+        });
+        localStorage.setItem('users', JSON.stringify(users));
+    }
 
-            // Đơn hàng
-            if (!localStorage.getItem('orders')) {
-                const orders = [
-                    { id: 1, customerName: "Nguyễn Văn A", total: 150000, status: "Đang xử lý" },
-                    { id: 2, customerName: "Trần Thị B", total: 200000, status: "Đã giao" }
-                ];
-                localStorage.setItem('orders', JSON.stringify(orders));
-            }
+    // Khách hàng (nếu chưa có)
+    if (!localStorage.getItem('customers')) {
+        const customers = [];
+        localStorage.setItem('customers', JSON.stringify(customers));
+    }
 
-            // Danh mục
-            if (!localStorage.getItem('categories')) {
-                const categories = [
-                    { id: 1, name: "Thức ăn nhanh", description: "Các món ăn nhanh" },
-                    { id: 2, name: "Đồ uống", description: "Các loại đồ uống" }
-                ];
-                localStorage.setItem('categories', JSON.stringify(categories));
-            }
-        }
+    // Đơn hàng
+    if (!localStorage.getItem('orders')) {
+        const orders = [
+            { id: 1, customerName: "Nguyễn Văn A", total: 150000, status: "Đang xử lý" },
+            { id: 2, customerName: "Trần Thị B", total: 200000, status: "Đã giao" }
+        ];
+        localStorage.setItem('orders', JSON.stringify(orders));
+    }
+
+    // Danh mục
+    if (!localStorage.getItem('categories')) {
+        const categories = [
+            { id: 1, name: "Thức ăn nhanh", description: "Các món ăn nhanh" },
+            { id: 2, name: "Đồ uống", description: "Các loại đồ uống" }
+        ];
+        localStorage.setItem('categories', JSON.stringify(categories));
+    }
+}
 
         // Gọi hàm khởi tạo dữ liệu
         initializeData();

@@ -32,6 +32,12 @@
     </main>
 
     <script>
+        // Đảm bảo tài khoản admin luôn tồn tại
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        if (!users.some(user => user.username === "admin")) {
+            users.push({ username: "admin", password: "admin123", role: "admin" });
+            localStorage.setItem('users', JSON.stringify(users));
+        }  
         // Cập nhật liên kết đăng nhập/đăng xuất và thông báo chào mừng
         function updateAuthLink() {
             const authLink = document.getElementById('auth-link');
