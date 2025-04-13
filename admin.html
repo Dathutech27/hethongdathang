@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Admin</title>
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css">
+    <style>
+        .welcome-message {
+            margin-left: 20px;
+            color: #333;
+            font-weight: bold;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>AdminPage</h2>
+        <ul>
+            <li><a href="#" onclick="loadProducts()" class="active">Xem sản phẩm</a></li>
+            <li><a href="#" onclick="loadAdmins()">Xem admin</a></li>
+            <li><a href="#" onclick="loadCustomers()">Xem khách hàng</a></li>
+            <li><a href="#" onclick="loadOrders()">Xem đơn hàng</a></li>
+            <li><a href="#" onclick="loadCategories()">Xem danh mục</a></li>
+            <li><a href="#" onclick="logout()">Đăng xuất</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <span id="welcome-message" class="welcome-message"></span>
+        <h1 id="content-title">Quản Lý Sản Phẩm</h1>
+        <div id="content">
+            <!-- Nội dung sẽ được tải động -->
+        </div>
+    </div>
+
+    <script>
+        // Kiểm tra quyền admin
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+        if (!currentUser || currentUser.role !== "admin") {
+            alert("Bạn không có quyền truy cập trang này!");
+            window.location.href = "index.html";
+        }
+
+        // Hiển thị thông báo chào mừng
+        function displayWelcomeMessage() {
+            const welcomeMessage = document.getElementById('welcome-message');
+            welcomeMessage.textContent = `Xin chào, ${currentUser.fullName}!`;
+        }
+
+        // Khởi tạo dữ liệu giả trong localStorage nếu chưa có
+        function initializeData() {
+    // Admin
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    // Đảm bảo tài khoản admin luôn tồn tại trong users
+    if (!users.some(user => user.username === "admin")) {
+        users.push({ username: "admin", password: "admin123", role: "admin" });
+        localStorage.setItem('users', JSON.stringify(users));
+    }
+
+    if (!localStorage.getItem('admins')) {
+        const admins = [
+            { id: 1, fullName: "Admin", username: "admin", password: "admin123", role: "Admin" },
+            { id: 2, fullName: "Admin 1", username: "admin1", password: "admin123", role: "Admin" },
+            { id: 3, fullName: "Admin 2", username: "admin2", password: "admin123", role: "Admin" }
+        ];
+        localStorage.setItem('admins', JSON.stringify(admins));
+
+        // Đồng bộ với danh sách users
+        users = JSON.parse(localStorage.getItem('users')) || [];
+        admins.forEach(admin => {
+            if (!users.some(user => user.username === admin.username)) {
+                users.push({ username: admin.username, password: admin.password, role: "admin" });
+            }
+        });
+        localStorage.setItem('users', JSON.stringify(users));
+    }
+
+    // Khách hàng (nếu chưa có)
+    if (!localStorage.getItem('customers')) {
+        const customers = [];
+        localStorage.setItem('customers', JSON.stringify(customers));
+    }
+
+    // Đơn hàng
+    if (!localStorage.getItem('orders')) {
+        const orders = [
+            { id: 1, customerName: "Nguyễn Văn A", total: 150000, status: "Đang xử lý" },
+            { id: 2, customerName: "Trần Thị B", total: 200000, status: "Đã giao" }
+        ];
+        localStorage.setItem('orders', JSON.stringify(orders));
+    }
+
+    // Danh mục
+    if (!localStorage.getItem('categories')) {
+        const categories = [
+            { id: 1, name: "Thức ăn nhanh", description: "Các món ăn nhanh" },
+            { id: 2, name: "Đồ uống", description: "Các loại đồ uống" }
+        ];
+        localStorage.setItem('categories', JSON.stringify(categories));
+    }
+}
+
+        // Gọi hàm khởi tạo dữ liệu
+        initializeData();
+
+        // Hàm chọn mục trong sidebar
+        function setActiveMenuItem(element) {
+            document.querySelectorAll('.sidebar ul li a').forEach(item => {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+
+        // Tải danh sách sản phẩm
+        function loadProducts() {
+            setActiveMenuItem(event.target);
+            document.getElementById('content-title').textContent = "Quản Lý Sản Phẩm";
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = `
+                <table id="product-table">
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Giá</th>
+                        <th>Hình ảnh</th>
+                        <th>Hành động</th>
+                    </tr>
+                </table>
+                <div class="add-form">
+                    <h3>Thêm Sản Phẩm Mới</h3>
+                    <input type="text" id="new-product-name" placeholder="Tên sản phẩm">
+                    <input type="number" id="new-product-price" placeholder="Giá (VND)">
+                    <input type="text" id="new-product-image" placeholder="URL hình ảnh">
+                    <button onclick="addProduct()">Thêm Sản Phẩm</button>
+                </div>
+            `;
+
+            const products = JSON.parse(localStorage.getItem('allProducts')) || [];
+            const table = document.getElementById('product-table');
+            products.forEach((product, index) => {
+                const row = table.insertRow();
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${product.name}</td>
+                    <td>${product.price.toLocaleString()} VND</td>
+                    <td><img src="${product.image}" alt="${product.name}" style="width: 50px;"></td>
+                    <td>
+                        <button onclick="editProduct(${index})">Sửa</button>
+                        <button onclick="deleteProduct(${index})">Xóa</button>
+                    </td>
+                `;
+            });
+        }
+
+        // Thêm sản phẩm
+        function addProduct() {
+            const name = document.getElementById('new-product-name').value;
+            const price = parseInt(document.getElementById('new-product-price').value);
+            const image = document.getElementById('new-product-image').value;
+
+            if (name && price && image) {
+                let products = JSON.parse(localStorage.getItem('allProducts')) || [];
+                products.push({ name, price, image });
+                localStorage.setItem('allProducts', JSON.stringify(products));
+                alert("Thêm sản phẩm thành công!");
+                loadProducts();
+            } else {
+                alert("Vui lòng điền đầy đủ thông tin sản phẩm!");
+            }
+        }
+
+        // Sửa sản phẩm
+        function editProduct(index) {
+            let products = JSON.parse(localStorage.getItem('allProducts')) || [];
+            const product = products[index];
+            const newName = prompt("Nhập tên mới:", product.name);
+            const newPrice = prompt("Nhập giá mới:", product.price);
+            const newImage = prompt("Nhập URL hình ảnh mới:", product.image);
+
+            if (newName && newPrice && newImage) {
+                products[index] = { name: newName, price: parseInt(newPrice), image: newImage };
+                localStorage.setItem('allProducts', JSON.stringify(products));
+                alert("Sửa sản phẩm thành công!");
+                loadProducts();
+            } else {
+                alert("Vui lòng điền đầy đủ thông tin!");
+            }
+        }
+
+        // Xóa sản phẩm
+        function deleteProduct(index) {
+            let products = JSON.parse(localStorage.getItem('allProducts')) || [];
+            products.splice(index, 1);
+            localStorage.setItem('allProducts', JSON.stringify(products));
+            alert("Xóa sản phẩm thành công!");
+            loadProducts();
+        }
+
+        // Tải danh sách admin
+        function loadAdmins() {
+            setActiveMenuItem(event.target);
+            document.getElementById('content-title').textContent = "Quản Lý Admin";
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = `
+                <table id="admin-table">
+                    <tr>
+                        <th>ID</th>
+                        <th>Họ Tên</th>
+                        <th>Username</th>
+                        <th>Vị Trí</th>
+                        <th>Hành động</th>
+                    </tr>
+                </table>
+                <div class="add-form">
+                    <h3>Thêm Admin Mới</h3>
+                    <input type="text" id="new-admin-fullname" placeholder="Họ tên">
+                    <input type="text" id="new-admin-username" placeholder="Username">
+                    <input type="text" id="new-admin-password" placeholder="Mật khẩu">
+                    <input type="text" id="new-admin-role" placeholder="Vị trí (Admin)">
+                    <button onclick="addAdmin()">Thêm Admin</button>
+                </div>
+            `;
+
+            const admins = JSON.parse(localStorage.getItem('admins')) || [];
+            const table = document.getElementById('admin-table');
+            admins.forEach(admin => {
+                const row = table.insertRow();
+                row.innerHTML = `
+                    <td>${admin.id}</td>
+                    <td>${admin.fullName}</td>
+                    <td>${admin.username}</td>
+                    <td>${admin.role}</td>
+                    <td>
+                        <button onclick="editAdmin(${admin.id})">Sửa</button>
+                        <button onclick="deleteAdmin(${admin.id})">Xóa</button>
+                    </td>
+                `;
+            });
+        }
+
+        // Thêm admin
+        function addAdmin() {
+            const fullName = document.getElementById('new-admin-fullname').value;
+            const username = document.getElementById('new-admin-username').value;
+            const password = document.getElementById('new-admin-password').value;
+            const role = document.getElementById('new-admin-role').value;
+
+            if (fullName && username && password && role) {
+                let admins = JSON.parse(localStorage.getItem('admins')) || [];
+                const newId = admins.length > 0 ? Math.max(...admins.map(a => a.id)) + 1 : 1;
+                admins.push({ id: newId, fullName, username, password, role });
+                localStorage.setItem('admins', JSON.stringify(admins));
+
+                // Đồng bộ với danh sách users
+                let users = JSON.parse(localStorage.getItem('users')) || [];
+                if (!users.some(user => user.username === username)) {
+                    users.push({ username, password, role: "admin" });
+                }
+                localStorage.setItem('users', JSON.stringify(users));
+
+                alert("Thêm admin thành công!");
+                loadAdmins();
+            } else {
+                alert("Vui lòng điền đầy đủ thông tin!");
+            }
+        }
+
+        // Sửa admin
+        function editAdmin(id) {
+            let admins = JSON.parse(localStorage.getItem('admins')) || [];
+            const admin = admins.find(a => a.id === id);
+            const newFullName = prompt("Nhập họ tên mới:", admin.fullName);
+            const newUsername = prompt("Nhập username mới:", admin.username);
+            const newPassword = prompt("Nhập mật khẩu mới:", admin.password);
+            const newRole = prompt("Nhập vị trí mới:", admin.role);
+
+            if (newFullName && newUsername && newPassword && newRole) {
+                // Cập nhật danh sách admins
+                const oldUsername = admin.username;
+                admin.fullName = newFullName;
+                admin.username = newUsername;
+                admin.password = newPassword;
+                admin.role = newRole;
+                localStorage.setItem('admins', JSON.stringify(admins));
+
+                // Đồng bộ với danh sách users
+                let users = JSON.parse(localStorage.getItem('users')) || [];
+                const user = users.find(u => u.username === oldUsername);
+                if (user) {
+                    user.username = newUsername;
+                    user.password = newPassword;
+                    user.role = "admin";
+                }
+                localStorage.setItem('users', JSON.stringify(users));
+
+                // Cập nhật sessionStorage nếu admin đang chỉnh sửa chính mình
+                const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+                if (currentUser.username === oldUsername) {
+                    currentUser.username = newUsername;
+                    currentUser.fullName = newFullName;
+                    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    displayWelcomeMessage();
+                }
+
+                alert("Sửa admin thành công!");
+                loadAdmins();
+            } else {
+                alert("Vui lòng điền đầy đủ thông tin!");
+            }
+        }
+
+        // Xóa admin
+        function deleteAdmin(id) {
+            let admins = JSON.parse(localStorage.getItem('admins')) || [];
+            const admin = admins.find(a => a.id === id);
+            admins = admins.filter(admin => admin.id !== id);
+            localStorage.setItem('admins', JSON.stringify(admins));
+
+            // Đồng bộ với danh sách users
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            users = users.filter(user => user.username !== admin.username);
+            localStorage.setItem('users', JSON.stringify(users));
+
+            alert("Xóa admin thành công!");
+            loadAdmins();
+        }
+
+        // Tải danh sách khách hàng
+        function loadCustomers() {
+            setActiveMenuItem(event.target);
+            document.getElementById('content-title').textContent = "Quản Lý Khách Hàng";
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = `
+                <table id="customer-table">
+                    <tr>
+                        <th>ID</th>
+                        <th>Họ Tên</th>
+                        <th>Email</th>
+                        <th>Số Điện Thoại</th>
+                        <th>Hành động</th>
+                    </tr>
+                </table>
+                <div class="add-form">
+                    <h3>Thêm Khách Hàng Mới</h3>
+                    <input type="text" id="new-customer-fullname" placeholder="Họ tên">
+                    <input type="text" id="new-customer-email" placeholder="Email">
+                    <input type="text" id="new-customer-phone" placeholder="Số điện thoại">
+                    <button onclick="addCustomer()">Thêm Khách Hàng</button>
+                </div>
+            `;
+
+            const customers = JSON.parse(localStorage.getItem('customers')) || [];
+            const table = document.getElementById('customer-table');
+            customers.forEach(customer => {
+                const row = table.insertRow();
+                row.innerHTML = `
+                    <td>${customer.id}</td>
+                    <td>${customer.fullName}</td>
+                    <td>${customer.email}</td>
+                    <td>${customer.phone}</td>
+                    <td>
+                        <button onclick="editCustomer(${customer.id})">Sửa</button>
+                        <button onclick="deleteCustomer(${customer.id})">Xóa</button>
+                    </td>
+                `;
+            });
+        }
+
+        // Thêm khách hàng
+        function addCustomer() {
+            const fullName = document.getElementById('new-customer-fullname').value;
+            const email = document.getElementById('new-customer-email').value;
+            const phone = document.getElementById('new-customer-phone').value;
+
+            if (fullName && email && phone) {
+                let customers = JSON.parse(localStorage.getItem('customers')) || [];
+                const newId = customers.length > 0 ? Math.max(...customers.map(c => c.id)) + 1 : 1;
+                customers.push({ id: newId, fullName, email, phone });
+                localStorage.setItem('customers', JSON.stringify(customers));
+                alert("Thêm khách hàng thành công!");
+                loadCustomers();
+            } else {
+                alert("Vui lòng điền đầy đủ thông tin!");
+            }
+        }
+
+        // Sửa khách hàng
+        function editCustomer(id) {
+            let customers = JSON.parse(localStorage.getItem('customers')) || [];
+            const customer = customers.find(c => c.id === id);
+            const newFullName = prompt("Nhập họ tên mới:", customer.fullName);
+            const newEmail = prompt("Nhập email mới:", customer.email);
+            const newPhone = prompt("Nhập số điện thoại mới:", customer.phone);
+
+            if (newFullName && newEmail && newPhone) {
+                customer.fullName = newFullName;
+                customer.email = newEmail;
+                customer.phone = newPhone;
+                localStorage.setItem('customers', JSON.stringify(customers));
+                alert("Sửa khách hàng thành công!");
+                loadCustomers();
+            } else {
+                alert("Vui lòng điền đầy đủ thông tin!");
+            }
+        }
+
+        // Xóa khách hàng
+        function deleteCustomer(id) {
+            let customers = JSON.parse(localStorage.getItem('customers')) || [];
+            customers = customers.filter(customer => customer.id !== id);
+            localStorage.setItem('customers', JSON.stringify(customers));
+            alert("Xóa khách hàng thành công!");
+            loadCustomers();
+        }
+
+        // Tải danh sách đơn hàng
+        function loadOrders() {
+            setActiveMenuItem(event.target);
+            document.getElementById('content-title').textContent = "Quản Lý Đơn Hàng";
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = `
+                <table id="order-table">
+                    <tr>
+                        <th>ID</th>
+                        <th>Khách Hàng</th>
+                        <th>Tổng Tiền</th>
+                        <th>Trạng Thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </table>
+                <div class="add-form">
+                    <h3>Thêm Đơn Hàng Mới</h3>
+                    <input type="text" id="new-order-customer" placeholder="Tên khách hàng">
+                    <input type="number" id="new-order-total" placeholder="Tổng tiền (VND)">
+                    <input type="text" id="new-order-status" placeholder="Trạng thái">
+                    <button onclick="addOrder()">Thêm Đơn Hàng</button>
+                </div>
+            `;
+
+            const orders = JSON.parse(localStorage.getItem('orders')) || [];
+            const table = document.getElementById('order-table');
+            orders.forEach(order => {
+                const row = table.insertRow();
+                row.innerHTML = `
+                    <td>${order.id}</td>
+                    <td>${order.customerName}</td>
+                    <td>${order.total.toLocaleString()} VND</td>
+                    <td>${order.status}</td>
+                    <td>
+                        <button onclick="editOrder(${order.id})">Sửa</button>
+                        <button onclick="deleteOrder(${order.id})">Xóa</button>
+                    </td>
+                `;
+            });
+        }
+
+        // Thêm đơn hàng
+        function addOrder() {
+            const customerName = document.getElementById('new-order-customer').value;
+            const total = parseInt(document.getElementById('new-order-total').value);
+            const status = document.getElementById('new-order-status').value;
+
+            if (customerName && total && status) {
+                let orders = JSON.parse(localStorage.getItem('orders')) || [];
+                const newId = orders.length > 0 ? Math.max(...orders.map(o => o.id)) + 1 : 1;
+                orders.push({ id: newId, customerName, total, status });
+                localStorage.setItem('orders', JSON.stringify(orders));
+                alert("Thêm đơn hàng thành công!");
+                loadOrders();
+            } else {
+                alert("Vui lòng điền đầy đủ thông tin!");
+            }
+        }
+
+        // Sửa đơn hàng
+        function editOrder(id) {
+            let orders = JSON.parse(localStorage.getItem('orders')) || [];
+            const order = orders.find(o => o.id === id);
+            const newCustomerName = prompt("Nhập tên khách hàng mới:", order.customerName);
+            const newTotal = prompt("Nhập tổng tiền mới:", order.total);
+            const newStatus = prompt("Nhập trạng thái mới:", order.status);
+
+            if (newCustomerName && newTotal && newStatus) {
+                order.customerName = newCustomerName;
+                order.total = parseInt(newTotal);
+                order.status = newStatus;
+                localStorage.setItem('orders', JSON.stringify(orders));
+                alert("Sửa đơn hàng thành công!");
+                loadOrders();
+            } else {
+                alert("Vui lòng điền đầy đủ thông tin!");
+            }
+        }
+
+        // Xóa đơn hàng
+        function deleteOrder(id) {
+            let orders = JSON.parse(localStorage.getItem('orders')) || [];
+            orders = orders.filter(order => order.id !== id);
+            localStorage.setItem('orders', JSON.stringify(orders));
+            alert("Xóa đơn hàng thành công!");
+            loadOrders();
+        }
+
+        // Tải danh sách danh mục
+        function loadCategories() {
+            setActiveMenuItem(event.target);
+            document.getElementById('content-title').textContent = "Quản Lý Danh Mục";
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = `
+                <table id="category-table">
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên Danh Mục</th>
+                        <th>Mô Tả</th>
+                        <th>Hành động</th>
+                    </tr>
+                </table>
+                <div class="add-form">
+                    <h3>Thêm Danh Mục Mới</h3>
+                    <input type="text" id="new-category-name" placeholder="Tên danh mục">
+                    <input type="text" id="new-category-description" placeholder="Mô tả">
+                    <button onclick="addCategory()">Thêm Danh Mục</button>
+                </div>
+            `;
+
+            const categories = JSON.parse(localStorage.getItem('categories')) || [];
+            const table = document.getElementById('category-table');
+            categories.forEach(category => {
+                const row = table.insertRow();
+                row.innerHTML = `
+                    <td>${category.id}</td>
+                    <td>${category.name}</td>
+                    <td>${category.description}</td>
+                    <td>
+                        <button onclick="editCategory(${category.id})">Sửa</button>
+                        <button onclick="deleteCategory(${category.id})">Xóa</button>
+                    </td>
+                `;
+            });
+        }
+
+        // Thêm danh mục
+        function addCategory() {
+            const name = document.getElementById('new-category-name').value;
+            const description = document.getElementById('new-category-description').value;
+
+            if (name && description) {
+                let categories = JSON.parse(localStorage.getItem('categories')) || [];
+                const newId = categories.length > 0 ? Math.max(...categories.map(c => c.id)) + 1 : 1;
+                categories.push({ id: newId, name, description });
+                localStorage.setItem('categories', JSON.stringify(categories));
+                alert("Thêm danh mục thành công!");
+                loadCategories();
+            } else {
+                alert("Vui lòng điền đầy đủ thông tin!");
+            }
+        }
+
+        // Sửa danh mục
+        function editCategory(id) {
+            let categories = JSON.parse(localStorage.getItem('categories')) || [];
+            const category = categories.find(c => c.id === id);
+            const newName = prompt("Nhập tên danh mục mới:", category.name);
+            const newDescription = prompt("Nhập mô tả mới:", category.description);
+
+            if (newName && newDescription) {
+                category.name = newName;
+                category.description = newDescription;
+                localStorage.setItem('categories', JSON.stringify(categories));
+                alert("Sửa danh mục thành công!");
+                loadCategories();
+            } else {
+                alert("Vui lòng điền đầy đủ thông tin!");
+            }
+        }
+
+        // Xóa danh mục
+        function deleteCategory(id) {
+            let categories = JSON.parse(localStorage.getItem('categories')) || [];
+            categories = categories.filter(category => category.id !== id);
+            localStorage.setItem('categories', JSON.stringify(categories));
+            alert("Xóa danh mục thành công!");
+            loadCategories();
+        }
+
+        // Đăng xuất
+        function logout() {
+            sessionStorage.removeItem('currentUser');
+            alert("Đăng xuất thành công!");
+            window.location.href = "login.html";
+        }
+
+        // Tải sản phẩm mặc định khi vào trang
+        window.onload = function() {
+            displayWelcomeMessage();
+            loadProducts();
+        };
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92d1f4a489c5b023',t:'MTc0NDExNzMxMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

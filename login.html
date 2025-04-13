@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống đặt hàng trực tuyến</title>
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css">
+    <style>
+        #message {
+            color: #00ff00;
+            text-align: center;
+            margin: 10px 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        #message.error {
+            color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="index.html">Trang chủ</a></li>
+                <li><a href="cart.html">Giỏ hàng</a></li>
+                <li><a href="login.html">Đăng nhập</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div id="wrapper">
+            <form action="" id="form-login"> 
+                <h1 class="form-heading">Đăng nhập</h1>
+                <div class="form-group">
+                    <i class="far fa-user"></i>
+                    <input type="text" class="form-input" id="username" placeholder="Tên đăng nhập">
+                </div>
+                <div class="form-group">
+                    <i class="far fa-key"></i>
+                    <input type="password" class="form-input" id="password" placeholder="Mật khẩu">
+                    <div id="eye">
+                        <i class="far fa-eye"></i>
+                    </div>
+                </div>
+                <p id="message"></p>
+                <input type="submit" value="Đăng nhập" class="form-submit">
+                <p>Bạn chưa có tài khoản? <a href="register.html" class="register-link">Đăng ký</a></p>
+            </form>
+        </div>
+    </main>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        if (!users.some(user => user.username === "admin")) {
+            users.push({ username: "admin", password: "admin123", role: "admin" });
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+
+        // Xử lý đăng nhập
+        document.getElementById("form-login").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const messageElement = document.getElementById("message");
+
+            const result = validateLoginInput(username, password);
+            messageElement.textContent = result;
+            if (result === "Đăng nhập thành công") {
+                messageElement.classList.remove("error");
+            } else {
+                messageElement.classList.add("error");
+            }
+
+            if (result === "Đăng nhập thành công") {
+                const users = JSON.parse(localStorage.getItem('users')) || [];
+                const user = users.find(u => u.username === username && u.password === password);
+
+                // Lấy họ tên từ danh sách customers hoặc admins
+                let fullName = "";
+                if (user.role === "admin") {
+                    const admins = JSON.parse(localStorage.getItem('admins')) || [];
+                    const admin = admins.find(a => a.username === username);
+                    fullName = admin ? admin.fullName : username;
+                } else {
+                    const customers = JSON.parse(localStorage.getItem('customers')) || [];
+                    const customer = customers.find(c => c.fullName === username || c.email === `${username}@example.com`);
+                    fullName = customer ? customer.fullName : username;
+                }
+
+                
+                const userData = { ...user, fullName };
+                sessionStorage.setItem('currentUser', JSON.stringify(userData));
+
+                setTimeout(() => {
+                    if (user.role === "admin") {
+                        window.location.href = "admin.html";
+                    } else {
+                        window.location.href = "index.html";
+                    }
+                }, 1500);
+            }
+        });
+
+        // Kiểm tra thông tin đăng nhập
+        function validateLoginInput(username, password) {
+            if (username === "" || password === "") {
+                return "Vui lòng nhập đầy đủ thông tin";
+            }
+
+            if (username.length < 3 || password.length < 6) {
+                return "Tên đăng nhập hoặc mật khẩu quá ngắn";
+            }
+
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(u => u.username === username && u.password === password);
+            if (user) {
+                return "Đăng nhập thành công";
+            }
+            return "Sai tài khoản hoặc mật khẩu";
+        }
+
+        document.getElementById("eye").addEventListener("click", function() {
+            const input = this.parentElement.querySelector("input");
+            input.type = input.type === "password" ? "text" : "password";
+            this.querySelector("i").classList.toggle("fa-eye");
+            this.querySelector("i").classList.toggle("fa-eye-slash");
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92d1ff0d387dbf7d',t:'MTc0NDExNzczNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

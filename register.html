@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Đăng ký</title>
+        <link rel="stylesheet" href="css/reset.css">
+        <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css">
+        <style>
+            .error-message.success-message {
+                color: #4caf50;
+                border: 1px solid #4caf50;
+                background: rgba(76, 175, 80, 0.1);
+            }
+        </style>
+    </head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="index.html">Trang chủ</a></li>
+                <li><a href="cart.html">Giỏ hàng</a></li>
+                <li><a href="login.html">Đăng nhập</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div id="wrapper">
+            <form action="" id="form-login"> 
+                <h1 class="form-heading">Đăng ký</h1>
+                <div id="error-message" class="error-message"></div> <!-- Thêm div hiển thị lỗi -->
+                <div class="form-group">
+                    <i class="far fa-user"></i>
+                    <input type="text" class="form-input" id="username" placeholder="Tên đăng ký">
+                </div>
+                <div class="form-group">
+                    <i class="far fa-key"></i>
+                    <input type="password" class="form-input" id="password" placeholder="Mật khẩu">
+                    <div id="eye">
+                        <i class="far fa-eye"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <i class="far fa-key"></i>
+                    <input type="password" class="form-input" id="confirm-password" placeholder="Xác nhận mật khẩu">
+                    <div id="eye">
+                        <i class="far fa-eye"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <i class="far fa-user"></i>
+                    <input type="text" class="form-input" id="fullName" placeholder="Họ và tên">
+                </div>
+                <div class="form-group">
+                    <i class="far fa-envelope"></i>
+                    <input type="email" class="form-input" id="email" placeholder="Email">
+                </div>
+                <div class="form-group">
+                    <i class="fas fa-phone"></i>
+                    <input type="text" class="form-input" id="phone" placeholder="Số điện thoại">
+                </div>
+                <input type="submit" value="Đăng ký" class="form-submit">
+                <p>Bạn đã có tài khoản? <a href="login.html" class="register-link">Đăng nhập</a></p>
+            </form>
+        </div>
+    </main>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Đảm bảo tài khoản admin luôn tồn tại
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        if (!users.some(user => user.username === "admin")) {
+            users.push({ username: "admin", password: "admin123", role: "admin" });
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+    
+        document.getElementById("form-login").addEventListener("submit", function(event) {
+            event.preventDefault();
+    
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const confirmPassword = document.getElementById("confirm-password").value;
+            const fullName = document.getElementById("fullName").value;
+            const email = document.getElementById("email").value;
+            const phone = document.getElementById("phone").value;
+            const errorMessage = document.getElementById("error-message");
+    
+            // Hàm hiển thị lỗi
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.remove("success-message");
+                errorMessage.style.display = "block";
+                setTimeout(() => {
+                    errorMessage.style.display = "none";
+                }, 5000); // Ẩn sau 5 giây
+            }
+    
+            // Hàm hiển thị thông báo thành công
+            function showSuccess(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.add("success-message");
+                errorMessage.style.display = "block";
+                setTimeout(() => {
+                    errorMessage.style.display = "none";
+                }, 5000); // Ẩn sau 5 giây
+            }
+    
+            // Kiểm tra thông tin
+            if (username === "" || password === "" || confirmPassword === "" || fullName === "" || email === "" || phone === "") {
+                showError("Vui lòng nhập đầy đủ thông tin");
+                return;
+            }
+    
+            if (username.length < 3 || password.length < 6) {
+                showError("Tên đăng ký phải dài hơn 3 ký tự và mật khẩu phải dài hơn 6 ký tự");
+                return;
+            }
+    
+            if (password !== confirmPassword) {
+                showError("Mật khẩu xác nhận không khớp");
+                return;
+            }
+    
+            // Kiểm tra định dạng email
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(email)) {
+                showError("Email không hợp lệ");
+                return;
+            }
+    
+            // Kiểm tra định dạng số điện thoại
+            const phonePattern = /^[0-9]{10}$/;
+            if (!phonePattern.test(phone)) {
+                showError("Số điện thoại phải có 10 chữ số");
+                return;
+            }
+    
+            // Kiểm tra tên đăng ký đã tồn tại
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            if (users.some(user => user.username === username)) {
+                showError("Tên đăng ký đã tồn tại");
+                return;
+            }
+    
+            // Lưu tài khoản vào localStorage
+            users.push({ username, password, role: "customer" });
+            localStorage.setItem('users', JSON.stringify(users));
+    
+            // Lưu thông tin khách hàng
+            let customers = JSON.parse(localStorage.getItem('customers')) || [];
+            const newId = customers.length > 0 ? Math.max(...customers.map(c => c.id)) + 1 : 1;
+            customers.push({
+                id: newId,
+                fullName,
+                email,
+                phone
+            });
+            localStorage.setItem('customers', JSON.stringify(customers));
+    
+            // Hiển thị thông báo thành công và chuyển hướng
+            showSuccess("Đăng ký thành công!");
+            setTimeout(() => {
+                window.location.href = "login.html";
+            }, 2000); // Chuyển hướng sau 2 giây
+        });
+    
+        // Hiển thị/ẩn mật khẩu
+        document.querySelectorAll("#eye").forEach(eye => {
+            eye.addEventListener("click", function() {
+                const input = this.parentElement.querySelector("input");
+                input.type = input.type === "password" ? "text" : "password";
+                this.querySelector("i").classList.toggle("fa-eye");
+                this.querySelector("i").classList.toggle("fa-eye-slash");
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92d1ff0d5fb5adcc',t:'MTc0NDExNzczNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

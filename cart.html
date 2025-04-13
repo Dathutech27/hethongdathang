@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Giỏ hàng</title>
+        <link rel="stylesheet" href="css/reset.css">
+        <style>
+            .welcome-message {
+                margin-left: 20px;
+                color: #333;
+                font-weight: bold;
+            }
+            .error-message.success-message {
+                color: #4caf50;
+                border: 1px solid #4caf50;
+                background: rgba(76, 175, 80, 0.1);
+            }
+        </style>
+    </head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="index.html">Trang chủ</a></li>
+                <li><a href="cart.html">Giỏ hàng</a></li>
+                <li id="auth-link"></li>
+            </ul>
+            <span id="welcome-message" class="welcome-message"></span>
+        </nav>
+    </header>
+    <main>
+        <h1>Giỏ hàng của bạn</h1>
+        <div id="error-message" class="error-message"></div> <!-- Thêm div hiển thị lỗi -->
+        <div id="cart-items"></div>
+        <h3>Tổng tiền: <span id="total-price">0đ</span></h3>
+        <button class="checkout-btn" onclick="checkout()">Thanh toán</button>
+    </main>
+    <script>
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        if (!users.some(user => user.username === "admin")) {
+            users.push({ username: "admin", password: "admin123", role: "admin" });
+            localStorage.setItem('users', JSON.stringify(users));
+        }  
+    
+        // Cập nhật liên kết đăng nhập/đăng xuất và thông báo chào mừng
+        function updateAuthLink() {
+            const authLink = document.getElementById('auth-link');
+            const welcomeMessage = document.getElementById('welcome-message');
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+            if (currentUser) {
+                authLink.innerHTML = '<a href="#" onclick="logout()">Đăng xuất</a>';
+                welcomeMessage.textContent = `Xin chào, ${currentUser.fullName}!`;
+            } else {
+                authLink.innerHTML = '<a href="login.html">Đăng nhập</a>';
+                welcomeMessage.textContent = '';
+            }
+        }
+    
+        // Hiển thị giỏ hàng
+        function displayCart() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const cartItemsDiv = document.getElementById('cart-items');
+            const totalPriceSpan = document.getElementById('total-price');
+            const products = JSON.parse(localStorage.getItem('allProducts')) || [];
+    
+            if (cart.length === 0) {
+                cartItemsDiv.innerHTML = '<p>Chưa có sản phẩm nào.</p>';
+                totalPriceSpan.textContent = '0đ';
+                return;
+            }
+    
+            let total = 0;
+            let table = `
+                <table>
+                    <tr>
+                        <th>Hình ảnh</th>
+                        <th>Sản phẩm</th>
+                        <th>Giá</th>
+                        <th>Số lượng</th>
+                        <th>Tổng</th>
+                        <th>Hành động</th>
+                    </tr>
+            `;
+    
+            cart.forEach((item, index) => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+    
+                const product = products.find(product => product.name === item.name);
+                const imageUrl = product ? product.image : 'https://via.placeholder.com/50';
+    
+                table += `
+                    <tr>
+                        <td><img src="${imageUrl}" alt="${item.name}" class="cart-product-image"></td>
+                        <td>${item.name}</td>
+                        <td>${item.price.toLocaleString()}đ</td>
+                        <td>${item.quantity}</td>
+                        <td>${itemTotal.toLocaleString()}đ</td>
+                        <td><button onclick="removeFromCart(${index})">Xóa</button></td>
+                    </tr>
+                `;
+            });
+    
+            table += '</table>';
+            cartItemsDiv.innerHTML = table;
+            totalPriceSpan.textContent = `${total.toLocaleString()}đ`;
+        }
+    
+        // Xóa sản phẩm khỏi giỏ hàng
+        function removeFromCart(index) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            cart.splice(index, 1);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            displayCart();
+        }
+    
+        // Thanh toán
+        function checkout() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const errorMessage = document.getElementById("error-message");
+    
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.remove("success-message");
+                errorMessage.style.display = "block";
+                setTimeout(() => {
+                    errorMessage.style.display = "none";
+                }, 5000);
+            }
+    
+            function showSuccess(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.add("success-message");
+                errorMessage.style.display = "block";
+                setTimeout(() => {
+                    errorMessage.style.display = "none";
+                }, 5000);
+            }
+    
+            if (cart.length === 0) {
+                showError("Giỏ hàng trống! Vui lòng thêm sản phẩm trước khi thanh toán.");
+                return;
+            }
+    
+            let orders = JSON.parse(localStorage.getItem('orders')) || [];
+            const newId = orders.length > 0 ? Math.max(...orders.map(o => o.id)) + 1 : 1;
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+            const customerName = currentUser ? currentUser.fullName : "Khách hàng " + newId;
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            orders.push({ id: newId, customerName, total, status: "Đang xử lý" });
+            localStorage.setItem('orders', JSON.stringify(orders));
+    
+            showSuccess("Thanh toán thành công! Cảm ơn bạn đã mua hàng.");
+            localStorage.removeItem('cart');
+            displayCart();
+        }
+    
+        // Đăng xuất
+        function logout() {
+            sessionStorage.removeItem('currentUser');
+            localStorage.removeItem('cart');
+            window.location.href = "login.html";
+        }
+    
+        // Kiểm tra trạng thái đăng nhập khi tải trang
+        window.onload = function() {
+            updateAuthLink();
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+            const errorMessage = document.getElementById("error-message");
+    
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.remove("success-message");
+                errorMessage.style.display = "block";
+                setTimeout(() => {
+                    errorMessage.style.display = "none";
+                }, 5000);
+            }
+    
+            if (!currentUser) {
+                showError("Vui lòng đăng nhập để xem giỏ hàng!");
+                window.location.href = "login.html";
+                return;
+            }
+            displayCart();
+        };
+    </script>
+</body>
+</html>

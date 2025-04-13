@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Hệ thống đặt hàng</title>
+        <link rel="stylesheet" href="css/reset.css">
+        <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css">
+        <style>
+            .welcome-message {
+                margin-left: 20px;
+                color: #333;
+                font-weight: bold;
+            }
+            .error-message.success-message {
+                color: #4caf50;
+                border: 1px solid #4caf50;
+                background: rgba(76, 175, 80, 0.1);
+            }
+        </style>
+    </head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="index.html">Trang chủ</a></li>
+                <li><a href="cart.html">Giỏ hàng</a></li>
+                <li id="auth-link"></li>
+            </ul>
+            <span id="welcome-message" class="welcome-message"></span>
+            <input type="text" id="search" placeholder="Tìm kiếm sản phẩm...">
+            <button onclick="searchProduct()">Tìm kiếm</button>
+        </nav>
+    </header>
+    <main>
+        <section id="home">
+            <div class="home-content">
+                <h2>Khám Phá Công Nghệ Tương Lai</h2>
+                <p>Đặt mua các sản phẩm công nghệ hiện đại với giá tốt nhất ngay hôm nay!</p>
+                <a href="#products" class="cta-button">Xem Sản Phẩm Ngay</a>
+            </div>
+        </section>
+
+        <section id="products">
+            <h2>Sản Phẩm Công Nghệ</h2>
+            <div id="error-message" class="error-message"></div> <!-- Thêm div hiển thị lỗi -->
+            <div class="product-list" id="product-list"></div>
+        </section>
+
+        <section id="why-choose-us">
+            <h2>Lý Do Chọn Chúng Tôi</h2>
+            <div class="reasons">
+                <div class="reason">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>Chất Lượng Đảm Bảo</h3>
+                    <p>Tất cả sản phẩm đều chính hãng, có bảo hành đầy đủ.</p>
+                </div>
+                <div class="reason">
+                    <i class="fas fa-shipping-fast"></i>
+                    <h3>Giao Hàng Nhanh Chóng</h3>
+                    <p>Giao hàng toàn quốc, nhận hàng trong 24-48 giờ.</p>
+                </div>
+                <div class="reason">
+                    <i class="fas fa-headset"></i>
+                    <h3>Hỗ Trợ 24/7</h3>
+                    <p>Đội ngũ hỗ trợ luôn sẵn sàng giải đáp mọi thắc mắc.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Thông Tin Liên Hệ</h3>
+                <p><i class="fas fa-map-marker-alt"></i> Đại Học Công Nghệ, TP. Hồ Chí Minh</p>
+                <p><i class="fas fa-phone"></i> 0356 894 178</p>
+                <p><i class="fas fa-envelope"></i> <a href="/cdn-cgi/l/email-protection#c8bbbdb8b8a7babc88adb0a9a5b8a4ade6aba7a5"><span class="__cf_email__" data-cfemail="630563534c515763465b424e534f460d404c4e">[email&#160;protected]</span></a></p>
+            </div>
+            <div class="footer-section">
+                <h3>Liên Kết Nhanh</h3>
+                <ul>
+                    <li><a href="index.html">Trang chủ</a></li>
+                    <li><a href="cart.html">Giỏ hàng</a></li>
+                    <li><a href="login.html">Đăng nhập</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Theo Dõi Chúng Tôi</h3>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="footer-bottom-left">
+                Designed with <i class="fas fa-heart" style="color: #ff0000;"></i> by 
+                <a href="#" title="Thành Đạt">Thành Đạt</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Khởi tạo danh sách sản phẩm nếu chưa có
+        if (!localStorage.getItem('allProducts')) {
+            const initialProducts = [
+                { name: "iPhone 14", price: 25000000, image: "https://tse1.mm.bing.net/th?id=OIP.86WXpNO4hlZwYe3qwTW5FAHaEK&pid=Api&P=0&h=220" },
+                { name: "MacBook Pro", price: 35000000, image: "https://sm.pcmag.com/pcmag_au/gallery/a/apple-macb/apple-macbook-pro-15-inch-2017_57va.jpg" },
+                { name: "AirPods Pro", price: 5500000, image: "https://www.zdnet.com/a/img/2022/09/21/a98e0665-133f-402e-8585-dec1d37743d8/9bd01eab-12e7-4d30-bce1-36d48b253c9a.jpg" },
+                { name: "Samsung Galaxy S23", price: 22000000, image: "https://www.allround-pc.com/wp-content/uploads/2022/09/Samsung-Galaxy-S23-Render-1-Digit.in_.jpg" },
+                { name: "Dell XPS 13", price: 30000000, image: "https://paidfreedroid.com/wp-content/uploads/2020/12/Dell-XPS-13-9310-scaled.jpg" },
+                { name: "Sony WH-1000XM5", price: 8000000, image: "https://nextrift.com/wp-content/uploads/2022/06/sony-wh-1000xm5-review-11.jpg" },
+                { name: "Apple Watch Series 8", price: 12000000, image: "https://t2.tudocdn.net/639257?w=1920" },
+                { name: "iPad Pro", price: 28000000, image: "https://9to5mac.com/wp-content/uploads/sites/6/2021/06/iPad-Pro-2021-Review.jpg?quality=82&strip=all" },
+                { name: "Logitech MX Master 3", price: 2500000, image: "https://demcrumbliesreviews.com/wp-content/uploads/2022/06/Logitech-MX-Master-3S-vs-MX-3.jpg" },
+                { name: "Samsung Galaxy Tab S9", price: 20000000, image: "https://static1.anpoimages.com/wordpress/wp-content/uploads/2023/08/samsung-galaxy-tab-s9-review-01.jpg" }
+            ];
+            localStorage.setItem('allProducts', JSON.stringify(initialProducts));
+        }
+    
+        // Đảm bảo tài khoản admin luôn tồn tại
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        if (!users.some(user => user.username === "admin")) {
+            users.push({ username: "admin", password: "admin123", role: "admin" });
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+    
+        // Cập nhật liên kết đăng nhập/đăng xuất và thông báo chào mừng
+        function updateAuthLink() {
+            const authLink = document.getElementById('auth-link');
+            const welcomeMessage = document.getElementById('welcome-message');
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+            if (currentUser) {
+                authLink.innerHTML = '<a href="#" onclick="logout()">Đăng xuất</a>';
+                welcomeMessage.textContent = `Xin chào, ${currentUser.fullName}!`;
+            } else {
+                authLink.innerHTML = '<a href="login.html">Đăng nhập</a>';
+                welcomeMessage.textContent = '';
+            }
+        }
+    
+        // Hiển thị sản phẩm
+        function displayProducts() {
+            const products = JSON.parse(localStorage.getItem('allProducts')) || [];
+            const productList = document.getElementById('product-list');
+            productList.innerHTML = '';
+            products.forEach(product => {
+                const productId = product.name.replace(/\s+/g, '-');
+                const productDiv = document.createElement('div');
+                productDiv.classList.add('product');
+                productDiv.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p>${product.price.toLocaleString()}đ</p>
+                    <div class="product-actions">
+                        <input type="number" id="quantity-${productId}" value="1" min="1">
+                        <button onclick="addToCart('${product.name}', ${product.price}, '${productId}')">
+                            <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+                        </button>
+                    </div>
+                `;
+                productList.appendChild(productDiv);
+            });
+        }
+    
+        // Thêm sản phẩm vào giỏ hàng
+        function addToCart(name, price, id) {
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+            const errorMessage = document.getElementById("error-message");
+    
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.remove("success-message");
+                errorMessage.style.display = "block";
+                setTimeout(() => {
+                    errorMessage.style.display = "none";
+                }, 5000);
+            }
+    
+            function showSuccess(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.add("success-message");
+                errorMessage.style.display = "block";
+                setTimeout(() => {
+                    errorMessage.style.display = "none";
+                }, 5000);
+            }
+    
+            if (!currentUser) {
+                showError("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
+                window.location.href = "login.html";
+                return;
+            }
+    
+            const quantity = parseInt(document.getElementById(`quantity-${id}`).value);
+            if (quantity < 1) {
+                showError("Số lượng phải lớn hơn 0!");
+                return;
+            }
+    
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const existingItem = cart.find(item => item.name === name);
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({ name, price, quantity });
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            showSuccess(`${name} (x${quantity}) đã được thêm vào giỏ hàng!`);
+        }
+    
+        // Tìm kiếm sản phẩm
+        function searchProduct() {
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            const productList = document.getElementById('product-list');
+            productList.innerHTML = '';
+            const products = JSON.parse(localStorage.getItem('allProducts')) || [];
+            const filteredProducts = products.filter(product => product.name.toLowerCase().includes(searchTerm));
+            if (filteredProducts.length === 0) {
+                productList.innerHTML = '<p>Không tìm thấy sản phẩm nào.</p>';
+            } else {
+                filteredProducts.forEach(product => {
+                    const productId = product.name.replace(/\s+/g, '-');
+                    const productDiv = document.createElement('div');
+                    productDiv.classList.add('product');
+                    productDiv.innerHTML = `
+                        <img src="${product.image}" alt="${product.name}">
+                        <h3>${product.name}</h3>
+                        <p>${product.price.toLocaleString()}đ</p>
+                        <div class="product-actions">
+                            <input type="number" id="quantity-${productId}" value="1" min="1">
+                            <button onclick="addToCart('${product.name}', ${product.price}, '${productId}')">
+                                <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+                            </button>
+                        </div>
+                    `;
+                    productList.appendChild(productDiv);
+                });
+            }
+        }
+    
+        // Đăng xuất
+        function logout() {
+            sessionStorage.removeItem('currentUser');
+            localStorage.removeItem('cart');
+            window.location.href = "login.html";
+        }
+    
+        // Hiển thị sản phẩm và cập nhật liên kết khi tải trang
+        window.onload = function() {
+            updateAuthLink();
+            displayProducts();
+        };
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92d1ff0d3a10b019',t:'MTc0NDExNzczNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
